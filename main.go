@@ -31,5 +31,7 @@ router.HandleFunc("/push", api.PushMessage).Methods("POST") // ✅ Add this line
 	if err := transport.StartQUICServer(":4242"); err != nil {
 		log.Fatalf("QUIC server failed: %v", err)
 	}
+
+	select{}
 }
 
