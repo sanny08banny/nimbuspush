@@ -29,12 +29,13 @@ func PushMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// payload := map[string]string{
-	// 	"title":   req.Title,
-	// 	"message": req.Message,
-	// }
+	payload := map[string]string{
+		"title":   req.Title,
+		"message": req.Message,
+	}
+	
 
-	err := transport.SendPush(req.DeviceID, req.Message)
+	err := transport.SendToDevice(req.DeviceID, payload)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(PushResponse{
