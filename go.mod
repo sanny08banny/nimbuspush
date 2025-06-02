@@ -3,7 +3,7 @@ module nimbuspush
 go 1.24.0
 
 require (
-	github.com/gorilla/mux v1.8.1
+	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/quic-go/quic-go v0.52.0
 	gorm.io/driver/postgres v1.6.0
 )
@@ -20,7 +20,7 @@ require (
 
 require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
-	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
+	github.com/google/pprof v0.0.0-20211008130755-947d60d73cc0 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect

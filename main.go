@@ -6,32 +6,33 @@ import (
 	"net/http"
 	"nimbuspush/config"
 	api "nimbuspush/internal/push"
-	"nimbuspush/internal/transport"
 
-	"github.com/gorilla/mux"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 func main() {
-	// Connect to database
-	config.ConnectDatabase()
+    // Init DB
+    config.ConnectDatabase()
 
 
-	router := mux.NewRouter()
-router.HandleFunc("/register", api.RegisterDevice).Methods("POST")
-router.HandleFunc("/push", api.PushMessage).Methods("POST") // ✅ Add this line
+    // Init Kafka producer
+    producer, err := kafka.NewProducer(&kafka.ConfigMap{
+        "bootstrap.servers": "localhost:9092",
+    })
+    if err != nil {
+        log.Fatalf("Kafka producer init failed: %v", err)
+    }
+    defer producer.Close()
 
-	go func() {
-		fmt.Println("Starting HTTP REST API on :8080")
-		if err := http.ListenAndServe(":8080", router); err != nil {
-			log.Fatalf("HTTP server failed: %v", err)
-		}
-	}()
+    api.Producer = producer
+    api.KafkaTopic = "nimbus-messages"
 
-	// Start QUIC server on :4242 (blocking)
-	if err := transport.StartServer(":4242"); err != nil {
-		log.Fatalf("QUIC server failed: %v", err)
-	}
+    // Routes
+    http.HandleFunc("/register", api.RegisterDevice)
+    http.HandleFunc("/publish", api.PublishMessage)
 
-	select{}
+    fmt.Println("Server running on :8080")
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
 

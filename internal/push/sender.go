@@ -1,51 +1,48 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
-	"nimbuspush/internal/transport"
+    "encoding/json"
+    "net/http"
+
+    "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-type PushRequest struct {
-	DeviceID string `json:"device_id"`
-	Title    string `json:"title"`
-	Message  string `json:"message"`
+type PublishRequest struct {
+    DeviceID string `json:"device_id"`
+    Message  string `json:"message"`
 }
 
-type PushResponse struct {
-	Status  string `json:"status"`
-	Details string `json:"details,omitempty"`
+type PublishResponse struct {
+    Status string `json:"status"`
 }
 
-func PushMessage(w http.ResponseWriter, r *http.Request) {
-	var req PushRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
-		return
-	}
+var Producer *kafka.Producer
+var KafkaTopic string
 
-	if req.DeviceID == "" || req.Title == "" || req.Message == "" {
-		http.Error(w, "Missing fields: device_id, title, or message", http.StatusBadRequest)
-		return
-	}
+func PublishMessage(w http.ResponseWriter, r *http.Request) {
+    var req PublishRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid JSON", http.StatusBadRequest)
+        return
+    }
 
-	payload := map[string]string{
-		"title":   req.Title,
-		"message": req.Message,
-	}
-	
+    if req.DeviceID == "" || req.Message == "" {
+        http.Error(w, "Missing device_id or message", http.StatusBadRequest)
+        return
+    }
 
-	err := transport.SendToDevice(req.DeviceID, payload)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(PushResponse{
-			Status:  "error",
-			Details: err.Error(),
-		})
-		return
-	}
+    msg := &kafka.Message{
+        TopicPartition: kafka.TopicPartition{Topic: &KafkaTopic, Partition: kafka.PartitionAny},
+        Key:            []byte(req.DeviceID),
+        Value:          []byte(req.Message),
+    }
 
-	json.NewEncoder(w).Encode(PushResponse{
-		Status: "success",
-	})
+    err := Producer.Produce(msg, nil)
+    if err != nil {
+        http.Error(w, "Failed to produce Kafka message", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(PublishResponse{Status: "Message published"})
 }
