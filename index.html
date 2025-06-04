@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Device Web Client</title>
+  <script defer>
+    const API_BASE = 'http://localhost:8080';
+
+    async function sendRequest(endpoint, payload, outputId) {
+      try {
+        const res = await fetch(`${API_BASE}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const text = await res.text();
+        document.getElementById(outputId).textContent = text;
+      } catch (e) {
+        document.getElementById(outputId).textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function handleRegister() {
+      const device_id = document.getElementById('reg-device-id').value;
+      const token = document.getElementById('reg-token').value;
+      sendRequest('register', { device_id, token }, 'reg-result');
+    }
+
+    function handlePublish() {
+      const device_id = document.getElementById('pub-device-id').value;
+      const message = document.getElementById('pub-message').value;
+      sendRequest('publish', { device_id, message }, 'pub-result');
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full space-y-8">
+    <h1 class="text-2xl font-bold text-center text-gray-800">Device Client</h1>
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-700">Register Device</h2>
+      <input id="reg-device-id" placeholder="Device ID" value="device123"
+        class="w-full mt-2 p-2 border rounded-md" />
+      <input id="reg-token" placeholder="Token" value="abc123"
+        class="w-full mt-2 p-2 border rounded-md" />
+      <button onclick="handleRegister()"
+        class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">
+        Register
+      </button>
+      <p id="reg-result" class="mt-2 text-sm text-gray-600"></p>
+    </section>
+
+    <hr />
+
+    <section>
+      <h2 class="text-lg font-semibold text-gray-700">Publish Message</h2>
+      <input id="pub-device-id" placeholder="Device ID" value="device123"
+        class="w-full mt-2 p-2 border rounded-md" />
+      <input id="pub-message" placeholder="Message" value="Hello Kafka!"
+        class="w-full mt-2 p-2 border rounded-md" />
+      <button onclick="handlePublish()"
+        class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">
+        Publish
+      </button>
+      <p id="pub-result" class="mt-2 text-sm text-gray-600"></p>
+    </section>
+  </div>
+</body>
+</html>
